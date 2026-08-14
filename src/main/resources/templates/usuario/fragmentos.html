@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+    <head th:replace="~{general/fragmentos :: head}"/>
+
+    <body>
+        <!-- fragmento 1 para Agregar usuario en ventana modal -->
+        <section th:fragment="agregar">
+            <!-- Button trigger modal -->
+            <div class='row py-4 mb-2 bg-light' sec:authorize="hasRole('ROLE_ADMIN')">
+                <div class='col-md-1'></div>
+                <div class='col-md-3'>
+                    <button type="button" class="btn btn-medicare"
+                            data-bs-toggle="modal" data-bs-target="#agregarUsuarioModal">
+                        <i class="fa-solid fa-plus"></i> [[#{usuario.agregar}]]</button>
+                </div>
+            </div>
+            <!-- Modal -->
+            <div class="modal fade" id="agregarUsuarioModal" tabindex="-1"
+                 aria-labelledby="agregarUsuarioLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header bg-medicare text-white">
+                            <h1 class="modal-title fs-5" id="agregarUsuarioLabel">
+                                <i class="fa-solid fa-user-plus"></i> [[#{usuario.agregar}]]</h1>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <form th:action='@{/usuario/guardar}' th:object='${usuario}'
+                              class='was-validated' method="post">
+                            <div class="modal-body">
+                                <div class='mb-3'>
+                                    <label>[[#{usuario.nombre}]]</label>
+                                    <input type="text" name='nombre' class='form-control' maxlength="150" required/>
+                                </div>
+                                <div class='mb-3'>
+                                    <label>[[#{usuario.correo}]]</label>
+                                    <input type="email" name='correo' class='form-control' maxlength="200" required/>
+                                </div>
+                                <div class='mb-3'>
+                                    <label>[[#{usuario.password}]]</label>
+                                    <input type="password" name='password' class='form-control' maxlength="100" required/>
+                                </div>
+                                <div class='mb-3'>
+                                    <label>[[#{role.rol}]]</label>
+                                    <select name='rolId' class='form-select' required>
+                                        <option value="" disabled selected>[[#{role.rol}]]</option>
+                                        <option th:each="r : ${roles}"
+                                                th:value="${r.idRol}"
+                                                th:text="${r.rol}">
+                                        </option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                    <i class="fa-solid fa-xmark"></i> [[#{accion.cerrar}]]</button>
+                                <button type="submit" class="btn btn-medicare">
+                                    <i class="fa-solid fa-floppy-disk"></i> [[#{accion.guardar}]]</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- fragmento 2 para el listado de usuarios -->
+        <section th:fragment="listado" class="p-3">
+            <div class="row p-3">
+                <div class="col-md-9">
+                    <div class="card p-2">
+                        <div class="card-header"><h4>[[#{usuario.listado}]]</h4></div>
+                        <div class="card-body">
+                            <div th:if="${usuarios != null and !usuarios.empty}">
+                                <table class="table table-striped table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>[[#{usuario.nombre}]]</th>
+                                            <th>[[#{usuario.correo}]]</th>
+                                            <th>[[#{role.rol}]]</th>
+                                            <th>[[#{usuario.activo}]]</th>
+                                            <th sec:authorize="hasRole('ROLE_ADMIN')"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="u : ${usuarios}">
+                                            <td>[[${u.idUsuario}]]</td>
+                                            <td>[[${u.nombre}]]</td>
+                                            <td>[[${u.correo}]]</td>
+                                            <td><span class="badge bg-medicare" th:text="${u.rol.rol}"></span></td>
+                                            <td th:text="${u.activo} ? #{texto.si} : #{texto.no}"></td>
+                                            <td sec:authorize="hasRole('ROLE_ADMIN')">
+                                                <button type="button" class="btn btn-danger btn-sm"
+                                                        data-bs-toggle="modal" data-bs-target="#confirmModal"
+                                                        th:data-bs-id="${u.idUsuario}"
+                                                        th:data-bs-descripcion="${u.nombre}">
+                                                    <i class="fa-solid fa-trash"></i> [[#{accion.eliminar}]]
+                                                </button>
+                                                <a th:href="@{/usuario/modificar/}+${u.idUsuario}" class="btn btn-warning btn-sm">
+                                                    <i class="fas fa-pencil-alt"></i> [[#{accion.actualizar}]]
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="text-center p-2" th:if="${usuarios == null or usuarios.empty}">
+                                <span>[[#{lista.vacia}]]</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center bg-medicare-verde text-white mb-3">
+                        <div class="card-body">
+                            <h3>[[#{usuario.total}]]</h3>
+                            <h4 class="fs-2"><i class="fas fa-users"></i> [[${totalUsuarios}]]</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3 Fragmento que se utiliza en la página modifica.html -->
+        <section th:fragment="editar">
+            <div class="row">
+                <div class="col-md-2"></div>
+                <div class="col-md-8">
+                    <form method="POST" th:action="@{/usuario/guardar}"
+                          th:object="${usuario}" class="was-validated">
+                        <input type="hidden" name="idUsuario" th:field="*{idUsuario}"/>
+                        <div class="row py-4 mb-4 bg-light">
+                            <div class="col-md-4 d-grid">
+                                <a th:href="@{/usuario/listado}" class="btn btn-medicare">
+                                    <i class="fas fa-arrow-left"></i> [[#{accion.regresar}]]</a>
+                            </div>
+                            <div class="col-md-4 d-grid">
+                                <button type="submit" class="btn btn-medicare-verde">
+                                    <i class="fas fa-check"></i> [[#{accion.guardar}]]</button>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col">
+                                <div class="card">
+                                    <div class="card-header"><h4>[[#{accion.actualizar}]]</h4></div>
+                                    <div class="card-body">
+                                        <div class='mb-3'>
+                                            <label>[[#{usuario.nombre}]]</label>
+                                            <input type="text" name='nombre' th:field='*{nombre}' class='form-control' maxlength="150" required/>
+                                            <div th:if="${#fields.hasErrors('nombre')}" class="text-danger">
+                                                <p th:errors="*{nombre}"></p>
+                                            </div>
+                                        </div>
+                                        <div class='mb-3'>
+                                            <label>[[#{usuario.correo}]]</label>
+                                            <input type="email" name='correo' th:field='*{correo}' class='form-control' maxlength="200" required/>
+                                            <div th:if="${#fields.hasErrors('correo')}" class="text-danger">
+                                                <p th:errors="*{correo}"></p>
+                                            </div>
+                                        </div>
+                                        <div class='mb-3'>
+                                            <label>[[#{usuario.password}]]</label>
+                                            <input type="password" name='password' th:field='*{password}' class='form-control' maxlength="100"
+                                                   placeholder="Dejar en blanco para no cambiar"/>
+                                        </div>
+                                        <div class='mb-3'>
+                                            <label>[[#{role.rol}]]</label>
+                                            <select name='rolId' class='form-select' required>
+                                                <option th:each="r : ${roles}"
+                                                        th:value="${r.idRol}"
+                                                        th:text="${r.rol}"
+                                                        th:selected="${usuario.rol != null and usuario.rol.idRol.equals(r.idRol)}">
+                                                </option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="activo">[[#{usuario.activo}]]</label>
+                                            <input class="form-check-input" type="checkbox"
+                                                   name="activo" id="activo" th:field="*{activo}"/>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4 fragmento que se utiliza para confirmar que se desea eliminar un usuario -->
+        <section th:fragment="confirmarEliminar">
+            <div class="modal fade"
+                 id="confirmModal"
+                 tabindex="-1"
+                 aria-labelledby="modalLabel"
+                 aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <form th:action="@{/usuario/eliminar}" method="post">
+                            <input type="hidden" name="idUsuario" id="modalId"/>
+                            <div class="modal-header bg-medicare-naranja text-white">
+                                <h5 class="modal-title" id="modalLabel">
+                                    <i class="fa-solid fa-circle-radiation"></i> [[#{accion.confirmar}]]
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>[[#{accion.confirmar.texto1}]] <span id="modalDescripcion"></span>?</p>
+                                <h6>[[#{accion.confirmar.texto2}]]</h6>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="fa-solid fa-trash"></i> [[#{accion.eliminar}]]
+                                </button>
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                    <i class="fa-solid fa-xmark"></i> [[#{accion.cerrar}]]
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <script th:inline="javascript">
+                var confirmModal = document.getElementById('confirmModal');
+                confirmModal.addEventListener('show.bs.modal', function (event) {
+                    var button = event.relatedTarget;
+                    document.getElementById('modalId').value = button.getAttribute('data-bs-id');
+                    document.getElementById('modalDescripcion').textContent = button.getAttribute('data-bs-descripcion');
+                });
+            </script>
+        </section>
+
+    </body>
+</html>

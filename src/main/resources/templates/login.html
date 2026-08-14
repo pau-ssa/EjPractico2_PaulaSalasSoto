@@ -1,15 +1,44 @@
 <!DOCTYPE html>
-<!--
-Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
-Click nbfs://nbhost/SystemFileSystem/Templates/Other/html.html to edit this template
--->
-<html>
-    <head>
-        <title>TODO supply a title</title>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    </head>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+    <head th:replace="~{general/fragmentos :: head}"/>
     <body>
-        <div>TODO write content</div>
+        <header th:replace="~{general/fragmentos :: header}"/>
+        <div class="row my-5">
+            <div class="col-md-4 offset-md-4">
+                <div class="card">
+                    <div class="card-header bg-medicare text-white text-center">
+                        <h2><i class="fas fa-heart-pulse"></i> [[#{login.login}]]</h2>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" th:action="@{/login}">
+                            <!-- Formulario y campos -->
+                            <div class="row my-3">
+                                <label for="correo" class="col-md-1 my-auto"><i class="fas fa-envelope"></i></label>
+                                <div class="col-md-11 my-auto">
+                                    <input class="form-control" id="correo" type="email" name="correo" th:placeholder="#{usuario.correo}"/>
+                                </div>
+                            </div>
+                            <div class="row my-3">
+                                <label for="password" class="col-md-1 my-auto"><i class="fas fa-key"></i></label>
+                                <div class="col-md-11 my-auto">
+                                    <input class="form-control" id="password" type="password" name="password" th:placeholder="#{login.password}"/>
+                                </div>
+                            </div>                            
+                            <!-- Botón para enviar el formulario -->
+                            <div class="d-flex justify-content-center mt-4">
+                                <button class="btn btn-medicare-verde px-4" type="submit"><i class="fas fa-sign-in-alt"></i> [[#{login.login}]]</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <!-- Manejo de Errores -->
+                <div th:if="${param.error != null}" class="alert alert-danger mt-3 text-center" role="alert">
+                    [[#{error.login}]]
+                </div>
+            </div>
+        </div>
+        <footer th:replace="~{general/fragmentos :: footer}"/>
     </body>
 </html>

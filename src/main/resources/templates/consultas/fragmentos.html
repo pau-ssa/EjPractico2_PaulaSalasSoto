@@ -1,15 +1,160 @@
-<!DOCTYPE html>
-<!--
-Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
-Click nbfs://nbhost/SystemFileSystem/Templates/Other/html.html to edit this template
--->
-<html>
-    <head>
-        <title>TODO supply a title</title>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    </head>
-    <body>
-        <div>TODO write content</div>
-    </body>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+
+    <!-- fragmento 1 para filtrar el listado de citas por estado -->
+    <section th:fragment="tabs" class="py-3 mb-4">
+        <div class="d-flex justify-content-center px-5"> 
+            <ul class="nav nav-underline">
+                <li class="nav-item">
+                    <a th:href="@{/citasmedicas/listado}" 
+                       th:classappend="${estadoActual == null} ? 'active'"
+                       class="nav-link" 
+                       aria-current="page">
+                        [[#{pruebas.todas}]]
+                    </a>
+                </li>
+                <li th:each="e : ${T(com.EjPractico2_PaulaSalasSoto.EjPractico2.domain.EstadoCita).values()}" class="nav-item">
+                    <a th:href="@{/citasmedicas/listado/{estado}(estado=${e})}"
+                       th:classappend="${estadoActual != null and estadoActual.equals(e)} ? 'active'"
+                       class="nav-link">
+                        [[${e.valorBD}]]
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- fragmento 2 para el listado de tarjetas de citas médicas -->
+    <section th:fragment="tarjetas" class="container py-4">
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-4 g-4">
+            <div th:each="c : ${citas}" class="col">
+                <div class="card h-100 shadow-sm card-cita">
+                    <div class="d-flex justify-content-center align-items-center bg-light p-3" style="height: 120px;">
+                        <i class="fas fa-stethoscope fa-3x text-medicare"></i>
+                    </div>
+                    <div class="card-header bg-white">
+                        <h5 class="card-title text-center text-truncate mb-0"
+                            th:text="${c.especialidad.valorBD}">Especialidad</h5>
+                    </div>
+                    <div class="card-body d-flex flex-column">
+                        <p class="card-text text-muted mb-1">
+                            <i class="fas fa-user"></i> [[${c.paciente.nombre}]]
+                        </p>
+                        <p class="card-text text-muted mb-auto">
+                            <i class="fas fa-calendar-days"></i>
+                            [[${#temporals.format(c.fechaHora, 'dd/MM/yyyy HH:mm')}]]
+                        </p>
+                    </div>
+                    <div class="card-footer bg-white d-flex justify-content-between align-items-center">
+                        <div class="fw-bold">
+                            <span class="text-escape-naranja h5" th:text="${#numbers.formatCurrency(c.costo)}">₡0.00</span>
+                            <span class="badge bg-medicare ms-2" th:text="${c.estado.valorBD}"></span>
+                        </div>
+                        <div sec:authorize="hasRole('ROLE_MEDICO')"
+                             th:if="${c.estado == T(com.EjPractico2_PaulaSalasSoto.EjPractico2.domain.EstadoCita).Programada}">
+                            <form th:action="@{/citasmedicas/completar}" th:method="POST" class="d-inline">
+                                <input type="hidden" th:value="${c.idCita}" name="idCita"/>
+                                <button type="submit" class="btn btn-sm btn-medicare-verde" title="Completar">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                            </form>
+                            <form th:action="@{/citasmedicas/cancelar}" th:method="POST" class="d-inline">
+                                <input type="hidden" th:value="${c.idCita}" name="idCita"/>
+                                <button type="submit" class="btn btn-sm btn-outline-medicare" title="Cancelar">
+                                    <i class="fas fa-xmark"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- fragmento 3 para mostrar los 2 formularios de las consultas JPQL agregadas -->
+    <section th:fragment='consultas' class='row row-cols-2 p-2'>
+        <div th:replace="~{consultas/fragmentos :: formConsultaPacienteEstado('primary',#{consultas.citas.por.paciente.estado},'/consultas/citasPorPacienteEstado')}"/>
+        <div th:replace="~{consultas/fragmentos :: formConsultaEspecialidadRango('warning',#{consultas.citas.por.especialidad.rango},'/consultas/citasPorEspecialidadRango')}"/>
+    </section>
+
+    <!-- fragmento 4: formulario para buscar citas por paciente y estado -->
+    <div th:fragment='formConsultaPacienteEstado(colorForm, textoForm, urlForm)'>
+        <form method="post" th:action='@{${urlForm}}' class='was-validated'>
+            <div class='card p-2'>
+                <div class="card-header text-center text-white" th:classappend="${'bg-'+colorForm}">
+                    <h5>[[${textoForm}]]</h5>
+                </div>
+                <div class="card-body">
+                    <div class='mb-3'>
+                        <label>[[#{citas.paciente}]]</label>
+                        <select name='pacienteId' class='form-select' required>
+                            <option value="" disabled selected>[[#{accion.buscar_usuario}]]</option>
+                            <option th:each="p : ${pacientes}"
+                                    th:value="${p.idUsuario}"
+                                    th:text="${p.nombre}"
+                                    th:selected="${pacienteId != null and pacienteId.equals(p.idUsuario)}">
+                            </option>
+                        </select>
+                    </div>
+                    <div class='mb-3'>
+                        <label>[[#{citas.estado}]]</label>
+                        <select name='estado' class='form-select' required>
+                            <option value="" disabled selected>[[#{citas.estado}]]</option>
+                            <option th:each="e : ${T(com.EjPractico2_PaulaSalasSoto.EjPractico2.domain.EstadoCita).values()}"
+                                    th:value="${e}"
+                                    th:text="${e.valorBD}"
+                                    th:selected="${estado != null and estado.equals(e)}">
+                            </option>
+                        </select>
+                    </div>
+                </div>
+                <div class="card-footer text-center">
+                    <button type='submit' class='btn text-white' th:classappend="${'btn-'+colorForm}">
+                        <i class='fa-solid fa-magnifying-glass'></i> [[${textoForm}]]
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- fragmento 5: formulario para contar citas por especialidad en un rango de fechas -->
+    <div th:fragment='formConsultaEspecialidadRango(colorForm, textoForm, urlForm)'>
+        <form method="post" th:action='@{${urlForm}}' class='was-validated'>
+            <div class='card p-2'>
+                <div class="card-header text-center text-white" th:classappend="${'bg-'+colorForm}">
+                    <h5>[[${textoForm}]]</h5>
+                </div>
+                <div class="card-body">
+                    <div class='mb-3'>
+                        <label>[[#{citas.especialidad}]]</label>
+                        <select name='especialidad' class='form-select' required>
+                            <option value="" disabled selected>[[#{citas.especialidad}]]</option>
+                            <option th:each="esp : ${T(com.EjPractico2_PaulaSalasSoto.EjPractico2.domain.Especialidad).values()}"
+                                    th:value="${esp}"
+                                    th:text="${esp.valorBD}"
+                                    th:selected="${especialidad != null and especialidad.equals(esp)}">
+                            </option>
+                        </select>
+                    </div>
+                    <div class='mb-3'>
+                        <label>[[#{citas.fecha_hora}]] Inicio</label>
+                        <input type="datetime-local" name='inicio' th:value='${inicio}'
+                               class='form-control' required/>
+                    </div>
+                    <div class='mb-3'>
+                        <label>[[#{citas.fecha_hora}]] Fin</label>
+                        <input type="datetime-local" name='fin' th:value='${fin}'
+                               class='form-control' required/>
+                    </div>
+                </div>
+                <div class="card-footer text-center">
+                    <button type='submit' class='btn text-white' th:classappend="${'btn-'+colorForm}">
+                        <i class='fa-solid fa-magnifying-glass'></i> [[${textoForm}]]
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
 </html>

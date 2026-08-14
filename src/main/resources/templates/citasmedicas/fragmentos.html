@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+    <head th:replace="~{general/fragmentos :: head}"/>
+
+    
+    
+    <body>
+        <!-- fragmento 1 para Agendar/Agregar cita en ventana modal -->
+        <section th:fragment="agregar">
+            <div class='row py-4 mb-2 bg-light' sec:authorize="hasAnyRole('ROLE_PACIENTE','ROLE_ADMIN')">
+                <div class='col-md-1'></div>
+                <div class='col-md-3'>
+                    <button type="button" class="btn btn-medicare"
+                            data-bs-toggle="modal" data-bs-target="#agregarCitaModal">
+                        <i class="fa-solid fa-plus"></i> [[#{citas.agregar}]]</button>
+                </div>
+            </div>
+            <!-- Modal -->
+            <div class="modal fade" id="agregarCitaModal" tabindex="-1"
+                 aria-labelledby="agregarCitaLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header bg-medicare text-white">
+                            <h1 class="modal-title fs-5" id="agregarCitaLabel">
+                                <i class="fa-solid fa-calendar-plus"></i> [[#{citas.agregar}]]</h1>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <form th:action='@{/citasmedicas/registrar}'
+                              th:object='${cita}' class='was-validated' method="post">
+                            <div class="modal-body">
+                                <div class='mb-3' sec:authorize="hasRole('ROLE_ADMIN')">
+                                    <label>[[#{citas.paciente}]]</label>
+                                    <select sec:authorize="hasAnyRole('ROLE_ADMIN')"name='pacienteId' class='form-select' required>
+                                        <option th:each="p : ${pacientes}" th:value="${p.idUsuario}" th:text="${p.nombre}"></option>
+                                    </select>
+                                </div>
+                                <div class='mb-3'>
+                                    <label>[[#{citas.especialidad}]]</label>
+                                    <select th:field="*{especialidad}" class="form-select" required>
+                                        <option value="" disabled selected>[[#{citas.especialidad}]]</option>
+                                        <option th:each="w : ${T(com.EjPractico2_PaulaSalasSoto.EjPractico2.domain.Especialidad).values()}"
+                                                th:value="${w}"
+                                                th:text="${w.valorBD}">
+                                        </option>
+                                    </select>
+                                </div>
+                                <div class='mb-3'>
+                                    <label>[[#{citas.fechaHora}]]</label>
+                                    <input type="datetime-local" th:field="*{fechaHora}" class='form-control' required/>
+                                </div>
+                                <div class='mb-3'>
+                                    <label>[[#{citas.costo}]]</label>
+                                    <input type="number" step="0.01" min="0" th:field="*{costo}" class='form-control' required/>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                    <i class="fa-solid fa-xmark"></i> [[#{accion.cerrar}]]</button>
+                                <button type="submit" class="btn btn-medicare">
+                                    <i class="fa-solid fa-floppy-disk"></i> [[#{accion.guardar}]]</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- fragmento 2 para el listado general de citas -->
+        <section th:fragment="listado" class="p-3">
+            <div class="row p-3">
+                <div class="col-md-9">
+                    <div class="card p-2">
+                        <div class="card-header"><h4>[[#{citas.listado}]]</h4></div>
+                        <div class="card-body">
+                            <div th:if="${citas != null and !citas.empty}">
+                                <table class="table table-striped table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>[[#{citas.paciente}]]</th>
+                                            <th>[[#{citas.especialidad}]]</th>
+                                            <th>[[#{citas.fechaHora}]]</th>
+                                            <th>[[#{citas.costo}]]</th>
+                                            <th>[[#{citas.estado}]]</th>
+                                            <th sec:authorize="hasAnyRole('ROLE_ADMIN','ROLE_MEDICO')"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="c : ${citas}">
+                                            <td>[[${c.idCita}]]</td>
+                                            <td>[[${c.paciente.nombre}]]</td>
+                                            <td>[[${c.especialidad}]]</td>
+                                            <td>[[${#temporals.format(c.fechaHora, 'dd/MM/yyyy HH:mm')}]]</td>
+                                            <td>[[${c.costo}]]</td>
+                                            <td><span class="badge bg-medicare" th:text="${c.estado.valorBD}"></span></td>
+                                            <td sec:authorize="hasAnyRole('ROLE_ADMIN','ROLE_MEDICO')">
+                                                <a th:href="@{/citasmedicas/editar/}+${c.idCita}" class="btn btn-warning">
+                                                    <i class="fas fa-pencil-alt"></i> [[#{accion.actualizar}]]
+                                                </a> 
+                                            </td>
+                                            <td sec:authorize="hasAnyRole('ROLE_ADMIN')">
+                                                <a th:href="@{/citasmedicas/confirmarEliminar/}+${c.idCita}" class="btn btn-danger btn-sm"
+                                                   data-bs-toggle="modal" data-bs-target="#confirmModal"
+                                                   th:data-bs-id="${c.idCita}"
+                                                   th:data-bs-descripcion="${c.especialidad}">
+                                                    <i class="fa-solid fa-trash"></i> [[#{accion.eliminar}]]
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="text-center p-2" th:if="${citas == null or citas.empty}">
+                                <span>[[#{lista.vacia}]]</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center bg-medicare-verde text-white mb-3">
+                        <div class="card-body">
+                            <h3>[[#{citas.total}]]</h3>
+                            <h4 class="fs-2"><i class="fas fa-calendar-check"></i> [[${totalCitas}]]</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- fragmento 3 para el historial de citas del PACIENTE autenticado -->
+        <section th:fragment="historial" class="p-3" sec:authorize="hasRole('ROLE_PACIENTE')">
+            <div class="row p-3">
+                <div class="col-md-12">
+                    <div class="card p-2">
+                        <div class="card-header"><h4>[[#{citas.historial}]]</h4></div>
+                        <div class="card-body">
+                            <div th:if="${citas != null and !citas.empty}">
+                                <table class="table table-striped table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>[[#{citas.especialidad}]]</th>
+                                            <th>[[#{citas.fechaHora}]]</th>
+                                            <th>[[#{citas.costo}]]</th>
+                                            <th>[[#{citas.estado}]]</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="c : ${citas}">
+                                            <td>[[${c.idCita}]]</td>
+                                            <td>[[${c.especialidad}]]</td>
+                                            <td>[[${#temporals.format(c.fechaHora, 'dd/MM/yyyy HH:mm')}]]</td>
+                                            <td>[[${c.costo}]]</td>
+                                            <td><span class="badge bg-medicare" th:text="${c.estado.valorBD}"></span></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="text-center p-2" th:if="${citas == null or citas.empty}">
+                                <span>[[#{lista.vacia}]]</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- 4 fragmento que se utiliza para confirmar el cambio de estado de una cita -->
+        <section th:fragment="editar" sec:authorize="hasAnyRole('ROLE_ADMIN','ROLE_MEDICO')">
+            <div class="row">
+                <div class="col-md-2"></div>
+                <div class="col-md-8">
+                    <form method="POST" th:action="@{/citasmedicas/guardar}"
+                          th:object="${cita}" class="was-validated">
+                        <input type="hidden" name="idCita" th:field="*{idCita}"/>
+                        <div class="row py-4 mb-4 bg-light">
+                            <div class="col-md-4 d-grid">
+                                <a th:href="@{/citasmedicas/listado}" class="btn btn-medicare">
+                                    <i class="fas fa-arrow-left"></i> [[#{accion.regresar}]]</a>
+                            </div>
+                            <div class="col-md-4 d-grid">
+                                <button type="submit" class="btn btn-medicare-verde">
+                                    <i class="fas fa-check"></i> [[#{accion.guardar}]]</button>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col">
+                                <div class="card">
+                                    <div class="card-header"><h4>[[#{accion.actualizar}]]</h4></div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="mb-3 col-md-6" sec:authorize="hasRole('ROLE_ADMIN')">
+                                                <label class="form-label">[[#{citas.paciente}]]</label>
+                                                <select th:field="*{paciente.idUsuario}" class="form-select" required>
+                                                    <option value="" disabled>[[#{citas.paciente}]]</option>
+                                                    <option th:each="p : ${pacientes}"
+                                                            th:value="${p.idUsuario}"
+                                                            th:text="${p.nombre}">
+                                                    </option>
+                                                </select>
+                                            </div>
+                                            <div class="mb-3 col-md-6" sec:authorize="hasRole('ROLE_ADMIN')">
+                                                <label for="especialidad" class="form-label">[[#{citas.especialidad}]]</label>
+                                                <select th:field="*{especialidad}"
+                                                        class="form-select"
+                                                        required
+                                                        id="especialidad">
+                                                    <option th:each="w : ${T(com.EjPractico2_PaulaSalasSoto.EjPractico2.domain.Especialidad).values()}"
+                                                            th:value="${w}"
+                                                            th:text="${w.valorBD}">
+                                                    </option>
+                                                </select>
+                                            </div>
+                                            <div class="mb-3 col-md-6" sec:authorize="hasRole('ROLE_ADMIN')">
+                                                <label class="form-label">[[#{citas.fechaHora}]]</label>
+                                                <input type="datetime-local" class="form-control"
+                                                       th:field="*{fechaHora}"
+                                                       required/>
+                                            </div>
+                                            <div class="mb-3 col-md-6" sec:authorize="hasRole('ROLE_ADMIN')">
+                                                <label class="form-label">[[#{citas.costo}]]</label>
+                                                <input type="number" step="0.01" min="0" class="form-control"
+                                                       th:field="*{costo}"
+                                                       required/>
+                                            </div>
+
+                                            <!-- Para MEDICO (sin rol ADMIN): datos de solo lectura -->
+                                            <div class="mb-3 col-md-6" sec:authorize="!hasRole('ROLE_ADMIN')">
+                                                <label class="form-label">[[#{citas.paciente}]]</label>
+                                                <input type="text" class="form-control" th:value="${cita.paciente.nombre}" disabled/>
+                                            </div>
+                                            <div class="mb-3 col-md-6" sec:authorize="!hasRole('ROLE_ADMIN')">
+                                                <label class="form-label">[[#{citas.especialidad}]]</label>
+                                                <input type="text" class="form-control" th:value="${cita.especialidad.valorBD}" disabled/>
+                                            </div>
+                                            <div class="mb-3 col-md-6" sec:authorize="!hasRole('ROLE_ADMIN')">
+                                                <label class="form-label">[[#{citas.fechaHora}]]</label>
+                                                <input type="text" class="form-control"
+                                                       th:value="${#temporals.format(cita.fechaHora, 'dd/MM/yyyy HH:mm')}" disabled/>
+                                            </div>
+                                            <div class="mb-3 col-md-6" sec:authorize="!hasRole('ROLE_ADMIN')">
+                                                <label class="form-label">[[#{citas.costo}]]</label>
+                                                <input type="text" class="form-control" th:value="${cita.costo}" disabled/>
+                                            </div>
+
+                                            <div class="mb-3 col-md-12">
+                                                <label for="estado" class="form-label">[[#{citas.estado}]]</label>
+                                                <select th:field="*{estado}"
+                                                        class="form-select"
+                                                        required
+                                                        id="estado">
+                                                    <option th:each="e : ${T(com.EjPractico2_PaulaSalasSoto.EjPractico2.domain.EstadoCita).values()}"
+                                                            th:value="${e}"
+                                                            th:text="${e.valorBD}">
+                                                    </option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+
+        <section th:fragment="confirmarEliminar"  sec:authorize="hasAnyRole('ROLE_ADMIN')">
+            <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <form th:action="@{/citasmedicas/eliminar}" method="post">
+                            <input type="hidden" name="idCita" id="modalId"/>
+                            <div class="modal-header bg-medicare-naranja text-white">
+                                <h5 class="modal-title" id="modalLabel">
+                                    <i class="fa-solid fa-circle-radiation"></i> [[#{accion.confirmar}]]
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>[[#{accion.confirmar.texto1}]] <span id="modalDescripcion"></span>?</p>
+                                <h6>[[#{accion.confirmar.texto2}]]</h6>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="fa-solid fa-trash"></i> [[#{accion.eliminar}]]
+                                </button>
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                    <i class="fa-solid fa-xmark"></i> [[#{accion.cerrar}]]
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <script th:inline="javascript">
+                var confirmModal = document.getElementById('confirmModal');
+                confirmModal.addEventListener('show.bs.modal', function (event) {
+                    var button = event.relatedTarget;
+                    document.getElementById('modalId').value = button.getAttribute('data-bs-id');
+                    document.getElementById('modalDescripcion').textContent = button.getAttribute('data-bs-descripcion');
+                });
+            </script>
+        </section>
+
+    </body>
+</html>

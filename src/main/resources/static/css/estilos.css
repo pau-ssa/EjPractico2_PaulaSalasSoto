@@ -1,9 +1,167 @@
-/*
-Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
-Click nbfs://nbhost/SystemFileSystem/Templates/Other/CascadeStyleSheet.css to edit this template
-*/
-/* 
-    Created on : 6 ago 2026, 7:19:50 p. m.
-    Author     : paula
-*/
+/* Estilos personalizados de MediCare */
+/* Paleta temática del sistema: morado claro, verde y crema */
+:root {
+    --medicare-morado: #8a6fb0;
+    --medicare-morado-oscuro: #5f4a80;
+    --medicare-crema: #faf7f0;
+    --medicare-arena: #ede5d3;
+    --medicare-verde: #4caf7d;
+    --medicare-verde-oscuro: #388a5f;
+}
 
+body {
+    background-color: var(--medicare-crema);
+}
+
+/* Barra de navegación */
+.navbar-medicare {
+    background-color: #fffdf8;
+    border-bottom: 1px solid var(--medicare-arena);
+}
+
+.navbar-medicare .navbar-brand {
+    color: var(--medicare-morado-oscuro);
+    font-weight: 700;
+    letter-spacing: 3px;
+}
+
+/* Sección de portada (hero) */
+.hero-medicare {
+    background: linear-gradient(135deg, var(--medicare-morado) 0%, var(--medicare-morado-oscuro) 100%);
+}
+
+/* Colores de marca reutilizables junto con Bootstrap */
+.bg-medicare {
+    background-color: var(--medicare-morado);
+}
+
+.text-medicare {
+    color: var(--medicare-morado);
+}
+
+.btn-medicare {
+    background-color: var(--medicare-morado);
+    color: #fff;
+}
+
+.btn-medicare:hover {
+    background-color: var(--medicare-morado-oscuro);
+    color: #fff;
+}
+
+/* Tarjetas de citas y especialidades */
+.card-cita {
+    transition: transform .2s ease-in-out, box-shadow .2s ease-in-out;
+}
+
+.card-cita:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .15);
+}
+
+/* Elemento activo del filtro de especialidades */
+.list-group-item.active {
+    background-color: var(--medicare-morado);
+    border-color: var(--medicare-morado);
+}
+
+/* Pie de página */
+.footer-medicare {
+    background-color: var(--medicare-morado-oscuro);
+}
+
+.btn-outline-medicare {
+    border-color: var(--medicare-morado);
+    color: var(--medicare-morado);
+}
+
+.btn-outline-medicare:hover {
+    background-color: var(--medicare-morado);
+    color: #fff;
+}
+
+.form-control:focus {
+    border-color: var(--medicare-morado);
+    box-shadow: 0 0 0 .25rem rgba(138, 111, 176, .25);
+}
+
+.badge.bg-medicare {
+    background-color: var(--medicare-morado) !important;
+}
+
+/* Acentos en verde para estados y elementos destacados (disponibilidad, confirmaciones, CTA) */
+.text-medicare-verde {
+    color: var(--medicare-verde);
+}
+
+.bg-medicare-verde {
+    background-color: var(--medicare-verde) !important;
+}
+
+.btn-medicare-verde {
+    background-color: var(--medicare-verde);
+    border-color: var(--medicare-verde);
+    color: #fff;
+}
+
+.btn-medicare-verde:hover {
+    background-color: var(--medicare-verde-oscuro);
+    border-color: var(--medicare-verde-oscuro);
+    color: #fff;
+}
+
+.badge.bg-medicare-verde {
+    background-color: var(--medicare-verde) !important;
+}
+
+/* Estados de citas médicas */
+.badge-estado-programada {
+    background-color: var(--medicare-morado) !important;
+    color: #fff;
+}
+
+.badge-estado-completada {
+    background-color: var(--medicare-verde) !important;
+    color: #fff;
+}
+
+.badge-estado-cancelada {
+    background-color: #b0532b !important;
+    color: #fff;
+}
+
+.card {
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+    z-index: 1;
+}
+
+.card:hover {
+  transform: scale(1.05);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+@media print {
+    /* 1. La regla principal: fija la cabecera en cada página */
+    thead {
+        display: table-header-group;
+    }
+    /* 2. Regla de compatibilidad (opcional pero recomendada) */
+    tr {
+        page-break-inside: avoid;
+    }
+
+    /* 3. Asegura que la tabla no tenga márgenes extraños que rompan el thead */
+    table {
+        margin: 0 !important;
+    }
+
+    /* [Opcional] Si está usando Bootstrap/cards para la tabla, elimine los bordes*/
+    .card, .card-body {
+        border: none !important;
+        box-shadow: none !important;
+    }
+    /* Oculta elementos de navegación, como se explicó antes */
+    .d-print-none, .navbar, .footer {
+        display: none !important;
+    }
+}

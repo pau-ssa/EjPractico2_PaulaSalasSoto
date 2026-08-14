@@ -1,15 +1,24 @@
 <!DOCTYPE html>
-<!--
-Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
-Click nbfs://nbhost/SystemFileSystem/Templates/Other/html.html to edit this template
--->
-<html>
-    <head>
-        <title>TODO supply a title</title>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    </head>
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+    <head th:replace="~{general/fragmentos.html :: head}"/>
+    
     <body>
-        <div>TODO write content</div>
+        <header th:replace="general/fragmentos :: header"/>
+      
+
+        
+        <section>
+            <div class="container py-5  text-center">
+                <h1 class="display-3  text-center" >MediCare</h1>
+                <h2 class="col-md-8 mx-auto  text-center">Tenemos a los mejores especialistas</h2>
+                <a th:href="@{/login}" class="btn btn-medicare btn-lg mt-2  text-white text-center">Agenda ya</a>
+            </div>
+        </section>
+        
+        <footer th:replace="general/fragmentos :: footer"/>
     </body>
 </html>
+

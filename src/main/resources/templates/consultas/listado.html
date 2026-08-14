@@ -1,15 +1,71 @@
 <!DOCTYPE html>
-<!--
-Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
-Click nbfs://nbhost/SystemFileSystem/Templates/Other/html.html to edit this template
--->
-<html>
-    <head>
-        <title>TODO supply a title</title>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    </head>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+    <head th:replace="~{general/fragmentos :: head}"/>
     <body>
-        <div>TODO write content</div>
+        <header th:replace="~{general/fragmentos :: header}"/>
+
+        <div class="container py-4">
+            <h2 class="text-center text-medicare mb-4">
+                <i class="fas fa-chart-line"></i> [[#{plantilla.consultas}]]
+            </h2>
+
+            <div th:replace="~{consultas/fragmentos :: consultas}"/>
+
+             <section th:if="${citasPorPacienteEstado != null}" class="mt-5">
+                <div class="card">
+                    <div class="card-header text-white bg-primary text-center">
+                        <h5><i class="fas fa-list"></i> [[#{consultas.citas.por.paciente.estado}]]</h5>
+                    </div>
+                    <div class="card-body">
+                        <div th:if="${#lists.isEmpty(citasPorPacienteEstado)}" class="text-center text-muted py-3">
+                            [[#{lista.vacia}]]
+                        </div>
+                        <div class="table-responsive" th:unless="${#lists.isEmpty(citasPorPacienteEstado)}">
+                            <table class="table table-hover align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>[[#{citas.especialidad}]]</th>
+                                        <th>[[#{citas.fecha_hora}]]</th>
+                                        <th>[[#{citas.costo}]]</th>
+                                        <th>[[#{citas.estado}]]</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="c : ${citasPorPacienteEstado}">
+                                        <td th:text="${c.especialidad.valorBD}">Especialidad</td>
+                                        <td th:text="${#temporals.format(c.fechaHora, 'dd/MM/yyyy HH:mm')}">Fecha</td>
+                                        <td th:text="${c.costo}">₡0.00</td>
+                                        <td><span class="badge bg-medicare" th:text="${c.estado.valorBD}"></span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+             <section th:if="${totalCitasEspecialidad != null}" class="mt-5">
+                <div class="card">
+                    <div class="card-header text-white bg-warning text-center">
+                        <h5><i class="fas fa-chart-simple"></i> [[#{consultas.citas.por.especialidad.rango}]]</h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <p class="mb-1">
+                            <span class="fw-bold" th:text="${especialidadConsultada.valorBD}">Especialidad</span>
+                            &nbsp;|&nbsp;
+                            <span th:text="${#temporals.format(inicioConsultado, 'dd/MM/yyyy HH:mm')}">Inicio</span>
+                            -
+                            <span th:text="${#temporals.format(finConsultado, 'dd/MM/yyyy HH:mm')}">Fin</span>
+                        </p>
+                        <div class="display-4 text-escape-naranja fw-bold" th:text="${totalCitasEspecialidad}">0</div>
+                        <p class="text-muted">[[#{citas.total}]]</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <footer th:replace="~{general/fragmentos :: footer}"/>
     </body>
 </html>
